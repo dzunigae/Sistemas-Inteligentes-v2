@@ -57,7 +57,7 @@ var othello = {};
   //var N = m === null ? 8 : parseInt(m[1]);
 
   //Acá podemos variar el tamaño del tablero
-  var N = 9;
+  var N = 8;
 
   var EMPTY = 'empty';
   var WHITE = 'white';
