@@ -396,11 +396,9 @@
 
         compute(board, time) {
           var moves = this.board.valid_moves(board, this.color);
-        
 
           var index = parseInt(prompt("Ingrese movimiento:"));
 
-          
           return moves[index];
         }
       }
@@ -412,139 +410,123 @@
         }
 
         compute(board, time) {
-          
-          
           var moves = this.board.valid_moves(board, this.color);
-          
-
-          
-          
-          return this.minimax(board,4,true,this.color,null)[1]
+          return this.minimax(board, 4, true, this.color, null)[1];
         }
 
-        bestMove(board,pmoves) {
-          
+        bestMove(board, pmoves) {
           var bestMove = pmoves[0];
           var bestScore = 0;
-          console.log(this.color)
+          console.log(this.color);
           for (const move of pmoves) {
-            var nboard=this.applyMove(board,move[0],move[1],this.color)
-          
-            
-            const score = this.countBw(nboard,this.color)-this.countBw(board,this.color)
-            console.log(score)
+            var nboard = this.applyMove(board, move[0], move[1], this.color);
+
+            const score =
+              this.countBw(nboard, this.color) -
+              this.countBw(board, this.color);
+            console.log(score);
             if (score > bestScore) {
               bestScore = score;
               bestMove = move;
             }
           }
-          console.log(bestScore)
-          console.log(bestMove)
-
+          console.log(bestScore);
+          console.log(bestMove);
 
           return bestMove;
         }
 
-            
+        minimax(board, depth, maximizingPlayer, player, move) {
+          // Verificar si el juego ha terminado o si se ha alcanzado la profundidad máxima.
+          var moves = this.board.valid_moves(board, player);
+          var piece = player === "B" ? "W" : "B";
 
-      minimax(board, depth, maximizingPlayer, player,move) {
-      // Verificar si el juego ha terminado o si se ha alcanzado la profundidad máxima.
-        var moves = this.board.valid_moves(board, player)
-        var piece = player === "B" ? "W" : "B";
+          // Verificar si el juego ha terminado o si se ha alcanzado la profundidad máxima.
+          if (depth == 0 || moves == []) {
+            var color = this.countBw(board, this.color);
+            var otro = this.color === "B" ? "W" : "B";
 
-
-
-         // Verificar si el juego ha terminado o si se ha alcanzado la profundidad máxima.
-        if (depth == 0 || moves==[] ) {
-          var color= this.countBw(board,this.color)
-          var otro = this.color === "B" ? "W" : "B";
-
-          var cp2= this.countBw(board,piece)
-          if (color>cp2) {
-            return [1, move];
-            
+            var cp2 = this.countBw(board, piece);
+            if (color > cp2) {
+              return [1, move];
+            } else if (color < cp2) {
+              return [-1, move];
+            } else {
+              return [0, move];
+            }
           }
-          else if (color<cp2) {
-            return [-1, move];
-            
-          }
-          else{
-            return [0, move];
+
+          // Si el jugador es el máximo, buscar el movimiento con la mejor puntuación.
+          else if (maximizingPlayer) {
+            var bestScore = -Infinity;
+            var bestMove = null;
+
+            for (var i = 0; i < moves.length; i++) {
+              var move = moves[i];
+
+              var newBoard = this.applyMove(board, move[0], move[1], player);
+              var piece = player === "B" ? "W" : "B";
+
+              var score = this.minimax(
+                newBoard,
+                depth - 1,
+                false,
+                piece,
+                move
+              )[0];
+              if (score >= bestScore) {
+                bestScore = score;
+                bestMove = move;
+              }
+            }
+
+            return [bestScore, bestMove];
+          } else {
+            // Si el jugador es el mínimo, buscar el movimiento con la peor puntuación.
+            var bestScore = Infinity;
+            var bestMove = null;
+
+            for (var i = 0; i < moves.length; i++) {
+              var move = moves[i];
+
+              var newBoard = this.applyMove(board, move[0], move[1], player);
+              var piece = player === "B" ? "W" : "B";
+
+              var score = this.minimax(
+                newBoard,
+                depth - 1,
+                true,
+                piece,
+                move
+              )[0];
+              if (score < bestScore) {
+                bestScore = score;
+                bestMove = move;
+              }
+            }
+
+            return [bestScore, bestMove];
           }
         }
 
-        
-      
-
-        // Si el jugador es el máximo, buscar el movimiento con la mejor puntuación.
-        else if (maximizingPlayer) {
-
-          var bestScore = -Infinity;
-          var bestMove = null;
-          
-          for (var i = 0; i < moves.length; i++) {
-            var move = moves[i];
-          
-            var newBoard = this.applyMove(board, move[0], move[1], player);
-            var piece = player === "B" ? "W" : "B";
-
-            var score = this.minimax(newBoard, depth - 1, false, piece,move)[0];
-            if (score >= bestScore) {
-              bestScore = score;
-              bestMove = move;
-            }
-          }
-         
-
-          return [bestScore, bestMove];
-        } else {
-          
-          
-          // Si el jugador es el mínimo, buscar el movimiento con la peor puntuación.
-          var bestScore = Infinity;
-          var bestMove = null;
-          
-          for (var i = 0; i < moves.length; i++) {
-            var move = moves[i];
-            
-
-            var newBoard = this.applyMove(board, move[0], move[1], player);
-            var piece = player === "B" ? "W" : "B";
-
-            var score = this.minimax(newBoard, depth - 1, true, piece,move)[0];
-            if (score < bestScore) {
-              bestScore = score;
-              bestMove = move;
-            }
-          }
-          
-
-          return [bestScore, bestMove];
-        }
-      }
-
-
-
-
-        bestMove(board,pmoves) {
-          
+        bestMove(board, pmoves) {
           var bestMove = pmoves[0];
           var bestScore = 0;
-          console.log(this.color)
+          console.log(this.color);
           for (const move of pmoves) {
-            var nboard=this.applyMove(board,move[0],move[1],this.color)
-          
-            
-            const score = this.countBw(nboard,this.color)-this.countBw(board,this.color)
-            console.log(score)
+            var nboard = this.applyMove(board, move[0], move[1], this.color);
+
+            const score =
+              this.countBw(nboard, this.color) -
+              this.countBw(board, this.color);
+            console.log(score);
             if (score > bestScore) {
               bestScore = score;
               bestMove = move;
             }
           }
-          console.log(bestScore)
-          console.log(bestMove)
-
+          console.log(bestScore);
+          console.log(bestMove);
 
           return bestMove;
         }
@@ -559,17 +541,22 @@
             }
           }
           return count;
-
         }
 
         applyMove(board, i, j, player) {
           // Comprobamos que la coordenada es válida
-          if (i < 0 || i >= board.length || j < 0 || j >= board[0].length || board[i][j] !== " ") {
+          if (
+            i < 0 ||
+            i >= board.length ||
+            j < 0 ||
+            j >= board[0].length ||
+            board[i][j] !== " "
+          ) {
             return null;
           }
 
           // Copiamos el tablero para no modificar el original
-          const newBoard = board.map(row => row.slice());
+          const newBoard = board.map((row) => row.slice());
 
           // Determinamos el color del jugador actual y el contrario
           const color = player === "B" ? "B" : "W";
@@ -579,17 +566,39 @@
           newBoard[i][j] = color;
 
           // Buscamos si hay alguna ficha del color contrario que se pueda voltear
-          const directions = [[-1, 0], [0, -1], [1, 0], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+          const directions = [
+            [-1, 0],
+            [0, -1],
+            [1, 0],
+            [0, 1],
+            [-1, -1],
+            [-1, 1],
+            [1, -1],
+            [1, 1],
+          ];
           for (const [dx, dy] of directions) {
             let x = i + dx;
             let y = j + dy;
             let flipped = false;
-            while (x >= 0 && x < newBoard.length && y >= 0 && y < newBoard[0].length && newBoard[x][y] === oppositeColor) {
+            while (
+              x >= 0 &&
+              x < newBoard.length &&
+              y >= 0 &&
+              y < newBoard[0].length &&
+              newBoard[x][y] === oppositeColor
+            ) {
               x += dx;
               y += dy;
               flipped = true;
             }
-            if (flipped && x >= 0 && x < newBoard.length && y >= 0 && y < newBoard[0].length && newBoard[x][y] === color) {
+            if (
+              flipped &&
+              x >= 0 &&
+              x < newBoard.length &&
+              y >= 0 &&
+              y < newBoard[0].length &&
+              newBoard[x][y] === color
+            ) {
               x -= dx;
               y -= dy;
               while (newBoard[x][y] === oppositeColor) {
@@ -602,10 +611,33 @@
 
           return newBoard;
         }
-
       }
 
+      class ManyDisks extends Agent {
+        constructor() {
+          super();
+          this.board = new Board();
+        }
 
+        compute(board, time) {
+          var moves = this.board.valid_moves(board, this.color);
+          var bestindex = 0;
+          var max_number_of_disk = 0;
+          var a_player = this.color === "B" ? "W" : "B";
+
+          for(var i = 0; i < moves.length; i++){
+            var evaluate = moves[i];
+            
+            if(evaluate[0] != 0){
+              if(board[evaluate[0] - 1][evaluate[1]] === a_player){
+                console.log(true)
+              }
+            }
+          }
+
+          //return moves[0];
+        }
+      }
 
       /*
        * Environment (Cannot be modified or any of its attributes accesed directly)
@@ -620,6 +652,7 @@
             rand2: new RandomPlayer(),
             min1: new MinMaxPlayer2(),
             human: new Human(),
+            md: new ManyDisks(),
           };
         }
 
@@ -839,7 +872,7 @@
                 width: "150px",
                 class: "w3-bar-item w3-input w3-border w3-round-xlarge",
                 placeholder: "&#xf10c; White",
-                value: "min1",
+                value: "md",
 
                 style:
                   "margin-top:2px;margin-bottom:2px;font-family: FontAwesome, Arial, Verdana, sans-serif;",
@@ -869,7 +902,7 @@
                 width: "150px",
                 class: "w3-bar-item w3-input w3-border w3-round-xlarge",
                 placeholder: "&#xf111; Black",
-                value: "rand1",
+                value: "min1",
                 style:
                   "margin-top:2px;margin-bottom:2px;font-family: FontAwesome, Arial, Verdana, sans-serif;",
               },
@@ -883,7 +916,7 @@
               {
                 width: "150px",
                 class: "w3-bar-item w3-input w3-border w3-round-xlarge",
-                
+
                 style:
                   "margin-top:2px;margin-bottom:2px;font-family: FontAwesome, Arial, Verdana, sans-serif;",
               },
