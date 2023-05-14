@@ -411,7 +411,8 @@
 
         compute(board, time) {
           var moves = this.board.valid_moves(board, this.color);
-          return this.minimax(board, 4, true, this.color, null)[1];
+          //return this.minimax(board, 4, true, this.color, null)[1];
+          return this.bestMove(board, moves);
         }
 
         bestMove(board, pmoves) {
@@ -627,15 +628,151 @@
 
           for(var i = 0; i < moves.length; i++){
             var evaluate = moves[i];
+            var number_of_disks = 0;
             
+            //Evaluación del símbolo a la izquierda
+            //Si la coordenada x actual es 0, se salta el procedimiento
             if(evaluate[0] != 0){
+              //Evaluando si a la izquierda hay una ficha del otro jugador
               if(board[evaluate[0] - 1][evaluate[1]] === a_player){
-                console.log(true)
+                var disks = 1
+                var j = 2;
+                while((evaluate[0] - j) >= 0 && board[evaluate[0] - j][evaluate[1]] === a_player){
+                  disks = disks + 1;
+                  j = j + 1;
+                };
+                if((evaluate[0] - j) >= 0 && board[evaluate[0] - j][evaluate[1]] === this.color){
+                  number_of_disks = number_of_disks + disks;
+                }
               }
+            };
+
+            //Evaluación del símbolo a la derecha
+            //Si la coordenada x actual es el tamaño del tablero, se salta el procedimiento
+            if(evaluate[0] != this.size-1){
+              //Evaluando si a la derecha hay una ficha del otro jugador
+              if(board[evaluate[0] + 1][evaluate[1]] === a_player){
+                var disks = 1
+                var j = 2;
+                while((evaluate[0] + j) <= this.size-1 && board[evaluate[0] + j][evaluate[1]] === a_player){
+                  disks = disks + 1;
+                  j = j + 1;
+                };
+                if((evaluate[0] + j) <= this.size-1 && board[evaluate[0] + j][evaluate[1]] === this.color){
+                  number_of_disks = number_of_disks + disks;
+                }
+              }
+            };
+
+            //Evaluación del símbolo arriba
+            //Si la coordenada y actual es 0, se salta el procedimiento
+            if(evaluate[1] != 0){
+              //Evaluando si arriba hay una ficha del otro jugador
+              if(board[evaluate[0]][evaluate[1]-1] === a_player){
+                var disks = 1
+                var j = 2;
+                while((evaluate[1] - j) >= 0 && board[evaluate[0]][evaluate[1] - j] === a_player){
+                  disks = disks + 1;
+                  j = j + 1;
+                };
+                if((evaluate[1] - j) >= 0 && board[evaluate[0]][evaluate[1] - j] === this.color){
+                  number_of_disks = number_of_disks + disks;
+                }
+              }
+            };
+
+            //Evaluación del símbolo abajo
+            //Si la coordenada y actual es el tamaño del tablero, se salta el procedimiento
+            if(evaluate[1] != this.size-1){
+              //Evaluando si abajo hay una ficha del otro jugador
+              if(board[evaluate[0]][evaluate[1]+1] === a_player){
+                var disks = 1
+                var j = 2;
+                while((evaluate[1] + j) <= this.size-1 && board[evaluate[0]][evaluate[1] + j] === a_player){
+                  disks = disks + 1;
+                  j = j + 1;
+                };
+                if((evaluate[1] + j) <= this.size-1 && board[evaluate[0]][evaluate[1] + j] === this.color){
+                  number_of_disks = number_of_disks + disks;
+                }
+              }
+            };
+
+            //Evaluación del símbolo en la esquina superior izquierda
+            //Si las coordenadas x y y actuales son 0, se salta el procedimiento
+            if(evaluate[0] != 0 && evaluate[1] != 0){
+              //Evaluando si en la esquina superior izquierda hay una ficha del otro jugador
+              if(board[evaluate[0]-1][evaluate[1]-1] === a_player){
+                var disks = 1
+                var j = 2;
+                while((evaluate[0] - j) >= 0 && (evaluate[1] - j) >= 0 && board[evaluate[0] - j][evaluate[1] - j] === a_player){
+                  disks = disks + 1;
+                  j = j + 1;
+                };
+                if((evaluate[0] - j) >= 0 && (evaluate[1] - j) >= 0 && board[evaluate[0] - j][evaluate[1] - j] === this.color){
+                  number_of_disks = number_of_disks + disks;
+                }
+              }
+            };
+
+            //Evaluación del símbolo en la esquina superior derecha
+            //Si la coordenada x actual es el tamaño del tablero y la coordenada y es 0, se salta el procedimiento
+            if(evaluate[0] != this.size-1 && evaluate[1] != 0){
+              //Evaluando si en la esquina superior derecha hay una ficha del otro jugador
+              if(board[evaluate[0]+1][evaluate[1]-1] === a_player){
+                var disks = 1
+                var j = 2;
+                while((evaluate[0] + j) <= this.size-1 && (evaluate[1] - j) >= 0 && board[evaluate[0] + j][evaluate[1] - j] === a_player){
+                  disks = disks + 1;
+                  j = j + 1;
+                };
+                if((evaluate[0] + j) <= this.size-1 && (evaluate[1] - j) >= 0 && board[evaluate[0] + j][evaluate[1] - j] === this.color){
+                  number_of_disks = number_of_disks + disks;
+                }
+              }
+            };
+
+            //Evaluación del símbolo en la esquina inferior izquierda
+            //Si la coordenada x actual es 0 y la coordenada y es el tamaño del tablero, se salta el procedimiento
+            if(evaluate[0] != 0 && evaluate[1] != this.size-1){
+              //Evaluando si en la esquina inferior izquierda hay una ficha del otro jugador
+              if(board[evaluate[0]-1][evaluate[1]+1] === a_player){
+                var disks = 1
+                var j = 2;
+                while((evaluate[0] - j) >= 0 && (evaluate[1] + j) <= this.color-1 && board[evaluate[0] - j][evaluate[1] + j] === a_player){
+                  disks = disks + 1;
+                  j = j + 1;
+                };
+                if((evaluate[0] - j) >= 0 && (evaluate[1] + j) <= this.color-1 && board[evaluate[0] - j][evaluate[1] + j] === this.color){
+                  number_of_disks = number_of_disks + disks;
+                }
+              }
+            };
+
+            //Evaluación del símbolo en la esquina inferior derecha
+            //Si Si las coordenadas x y y actuales son el tamaño del tablero, se salta el procedimiento
+            if(evaluate[0] != this.size-1 && evaluate[1] != this.size-1){
+              //Evaluando si en la esquina inferior derecha hay una ficha del otro jugador
+              if(board[evaluate[0]+1][evaluate[1]+1] === a_player){
+                var disks = 1
+                var j = 2;
+                while((evaluate[0] + j) <= this.color-1 && (evaluate[1] + j) <= this.color-1 && board[evaluate[0] + j][evaluate[1] + j] === a_player){
+                  disks = disks + 1;
+                  j = j + 1;
+                };
+                if((evaluate[0] + j) <= this.color-1 && (evaluate[1] + j) <= this.color-1 && board[evaluate[0] + j][evaluate[1] + j] === this.color){
+                  number_of_disks = number_of_disks + disks;
+                }
+              }
+            };
+
+            if(number_of_disks >= max_number_of_disk){
+              max_number_of_disk = number_of_disks;
+              bestindex = i;
             }
           }
 
-          //return moves[0];
+          return moves[bestindex];
         }
       }
 
