@@ -726,6 +726,18 @@
         }
       }
 
+      class ManyDisks_Cristian extends MinMaxPlayer2 {
+        constructor() {
+          super();
+          this.board = new Board();
+        }
+
+        compute(board, time) {
+          var moves = this.board.valid_moves(board, this.color);
+          return this.bestMove(board, moves);
+        }
+      }
+
       class ManyDisks extends Agent {
         constructor() {
           super();
@@ -901,6 +913,8 @@
             rand2: new RandomPlayer(),
             min1: new MinMaxPlayer2(),
             human: new Human(),
+            mdd: new ManyDisks(),
+            mdc: new ManyDisks_Cristian(),
             bA: new bestA(),
             md: new ManyDisks(),
           };
@@ -1122,7 +1136,7 @@
                 width: "150px",
                 class: "w3-bar-item w3-input w3-border w3-round-xlarge",
                 placeholder: "&#xf10c; White",
-                value: "md",
+                value: "mdd",
 
                 style:
                   "margin-top:2px;margin-bottom:2px;font-family: FontAwesome, Arial, Verdana, sans-serif;",
@@ -1152,7 +1166,7 @@
                 width: "150px",
                 class: "w3-bar-item w3-input w3-border w3-round-xlarge",
                 placeholder: "&#xf111; Black",
-                value: "min1",
+                value: "mdc",
                 style:
                   "margin-top:2px;margin-bottom:2px;font-family: FontAwesome, Arial, Verdana, sans-serif;",
               },
