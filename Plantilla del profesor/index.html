@@ -405,6 +405,127 @@
         }
       }
 
+      class bestA extends Agent {
+        constructor() {
+          super();
+          this.board = new Board();
+        }
+
+        compute(board, time) {
+          var moves = this.board.valid_moves(board, this.color);
+          var bestScore=-Infinity
+          var bestmove=moves[0]
+          if (moves==[]){
+            console.log("devuelvo 2 vacio")
+              return(moves[-1])
+            }
+          for (var move of moves) {
+            var nboard=this.applyMove(board,move[0],move[1],this.color)
+            var ficha = this.color === "B" ? "B" : "W";
+            var moves2 = this.board.valid_moves(nboard, this.color);
+            var gain = this.countBw(nboard,this.color)
+            if (moves2==[]){
+              console.log("devuelvo 2 vacio")
+              return(bestMove(board,moves))
+            }
+            for (var move2 of moves2) {
+              var mboard=this.applyMove(board,move2[0],move2[1],ficha)
+              var pain = this.countBw(mboard,ficha)
+              var score = gain - pain
+              if (score > bestScore) {
+                bestScore = score;
+                bestmove = move;
+            }
+
+            }
+          
+          }
+
+          
+          console.log(bestmove)
+          
+          return bestmove;
+        }
+
+        bestMove(board,pmoves, ficha) {
+          
+          var bestMove = pmoves[0];
+          var bestScore = 0;
+          for (const move of pmoves) {
+            var nboard=this.applyMove(board,move[0],move[1],ficha)
+          
+            
+            const score = this.countBw(nboard,ficha)-this.countBw(board,ficha)
+            console.log(score)
+            if (score > bestScore) {
+              bestScore = score;
+              bestMove = move;
+            }
+          }
+
+
+          return bestMove;
+        }
+
+        
+      countBw(array, letter) {
+          let count = 0;
+          for (const row of array) {
+            for (const cell of row) {
+              if (cell === letter) {
+                count++;
+              }
+            }
+          }
+          return count;
+
+        }
+
+
+
+        applyMove(board, i, j, player) {
+          // Comprobamos que la coordenada es válida
+          if (i < 0 || i >= board.length || j < 0 || j >= board[0].length || board[i][j] !== " ") {
+            return null;
+          }
+
+          // Copiamos el tablero para no modificar el original
+          const newBoard = board.map(row => row.slice());
+
+          // Determinamos el color del jugador actual y el contrario
+          const color = player === "B" ? "B" : "W";
+          const oppositeColor = player === "B" ? "W" : "B";
+
+          // Colocamos la ficha del jugador actual en la coordenada indicada
+          newBoard[i][j] = color;
+
+          // Buscamos si hay alguna ficha del color contrario que se pueda voltear
+          const directions = [[-1, 0], [0, -1], [1, 0], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]];
+          for (const [dx, dy] of directions) {
+            let x = i + dx;
+            let y = j + dy;
+            let flipped = false;
+            while (x >= 0 && x < newBoard.length && y >= 0 && y < newBoard[0].length && newBoard[x][y] === oppositeColor) {
+              x += dx;
+              y += dy;
+              flipped = true;
+            }
+            if (flipped && x >= 0 && x < newBoard.length && y >= 0 && y < newBoard[0].length && newBoard[x][y] === color) {
+              x -= dx;
+              y -= dy;
+              while (newBoard[x][y] === oppositeColor) {
+                newBoard[x][y] = color;
+                x -= dx;
+                y -= dy;
+              }
+            }
+          }
+
+          return newBoard;
+        }
+
+      }
+
       class MinMaxPlayer2 extends Agent {
         constructor() {
           super();
@@ -419,31 +540,10 @@
 
           
           
-          return this.minimax(board,4,true,this.color,null)[1]
+          return this.bestMove(board,moves)
         }
 
-        bestMove(board,pmoves) {
-          
-          var bestMove = pmoves[0];
-          var bestScore = 0;
-          console.log(this.color)
-          for (const move of pmoves) {
-            var nboard=this.applyMove(board,move[0],move[1],this.color)
-          
-            
-            const score = this.countBw(nboard,this.color)-this.countBw(board,this.color)
-            console.log(score)
-            if (score > bestScore) {
-              bestScore = score;
-              bestMove = move;
-            }
-          }
-          console.log(bestScore)
-          console.log(bestMove)
-
-
-          return bestMove;
-        }
+        
 
             
 
@@ -526,7 +626,7 @@
 
 
 
-        bestMove(board,pmoves) {
+      bestMove(board,pmoves) {
           
           var bestMove = pmoves[0];
           var bestScore = 0;
@@ -549,7 +649,7 @@
           return bestMove;
         }
 
-        countBw(array, letter) {
+      countBw(array, letter) {
           let count = 0;
           for (const row of array) {
             for (const cell of row) {
@@ -620,6 +720,7 @@
             rand2: new RandomPlayer(),
             min1: new MinMaxPlayer2(),
             human: new Human(),
+            bA: new bestA(),
           };
         }
 
