@@ -551,7 +551,7 @@
         compute(board, time) {
           var moves = this.board.valid_moves(board, this.color);
 
-          return this.minimax(board, moves);
+          return this.minimax(board, 4, true, this.color, null);
         }
 
         minimax(board, depth, maximizingPlayer, player, move) {
