@@ -38,6 +38,38 @@
         compute(board, time) {
           return [0, 0];
         }
+        generateWeightArray(n) {
+          const weights = [];
+          const middle = Math.floor(n / 2);
+
+          // Fill the array with zeros
+          for (let i = 0; i < n; i++) {
+            weights.push(new Array(n).fill(1));
+          }
+
+          // Set the weights for the corners
+          weights[0][0] = weights[0][n - 1] = weights[n - 1][0] = weights[n - 1][n - 1] = 100;
+
+          // Set the weights for the edges
+          for (let i = 1; i < n - 1; i++) {
+            weights[0][i] = weights[n - 1][i] = weights[i][0] = weights[i][n - 1] = 10;
+          }
+
+          // Set the weights for the cells adjacent to the corners
+          weights[1][1] = weights[1][n - 2] = weights[n - 2][1] = weights[n - 2][n - 2] = -50;
+
+          // Set the weights for the cells adjacent to the edges
+          for (let i = 2; i < n - 2; i++) {
+            weights[1][i] = weights[n - 2][i] = weights[i][1] = weights[i][n - 2] = -10;
+          }
+
+          // Set the weight for the middle cell
+          weights[middle][middle] = 50;
+
+          return weights;
+        }
+
+       
       }
 
       /*
@@ -407,59 +439,146 @@
         constructor() {
           super();
           this.board = new Board();
+          
+          
         }
+        
 
         compute(board, time) {
-          var moves = this.board.valid_moves(board, this.color);
-          var bestScore = -Infinity;
-          var bestmove = moves[0];
-          if (moves == []) {
-            console.log("devuelvo 2 vacio");
-            return moves[-1];
-          }
-          for (var move of moves) {
-            var nboard = this.applyMove(board, move[0], move[1], this.color);
-            var ficha = this.color === "B" ? "B" : "W";
-            var moves2 = this.board.valid_moves(nboard, this.color);
-            var gain = this.countBw(nboard, this.color);
-            if (moves2 == []) {
-              console.log("devuelvo 2 vacio");
-              return bestMove(board, moves);
-            }
-            for (var move2 of moves2) {
-              var mboard = this.applyMove(board, move2[0], move2[1], ficha);
-              var pain = this.countBw(mboard, ficha);
-              var score = gain - pain;
-              if (score > bestScore) {
-                bestScore = score;
-                bestmove = move;
-              }
-            }
+          
+          var warray = this.generateWeightArray(board.length)
+          console.log(warray)
+          
+          var moves = this.board.valid_moves(board, this.color);         
+            
+          
+
+          if (best ==null){
+            return moves[0]
           }
 
-          console.log(bestmove);
 
-          return bestmove;
+          return best
+         
+
         }
 
-        bestMove(board, pmoves, ficha) {
+        
+
+
+        alphabeta(board, depth, alpha, beta, maximizingPlayer, color) {
+
+          const otro = color === "B" ? "W" : "B";
+
+          var valid_moves = this.board.valid_moves(board, color);
+          
+
+          if (depth == 0 ) {
+            return [null, this.getscore(board, color)];
+          }
+
+          
+          
+
+          if (maximizingPlayer) {
+            var best_move = null;
+            var best_score = -Infinity;
+            
+            for (var move of valid_moves) {
+              var new_board = this.applyMove(board, move[0], move[1], color);
+
+              var score = this.alphabeta(new_board, depth - 1, alpha, beta, false, otro)[1];
+              
+              if (score > best_score) {
+                best_score = score;
+                best_move = move;
+              }
+              
+              alpha = Math.max(alpha, best_score);
+              if (beta <= alpha) {
+                break;
+              }
+            }
+            
+            return [best_move, best_score];
+          } else {
+            var best_move = null;
+            var best_score = Infinity;
+            
+            for (var move of valid_moves) {
+              var new_board = this.applyMove(board, move[0], move[1], color);
+              var score = this.alphabeta(new_board, depth - 1, alpha, beta, true, otro)[1];
+              
+              if (score < best_score) {
+                best_score = score;
+                best_move = move;
+              }
+              
+              beta = Math.min(beta, best_score);
+              if (beta <= alpha) {
+                break;
+              }
+            }
+            return [best_move, best_score];
+          }
+        }
+
+
+
+
+
+
+        bestMove(board, pmoves) {
           var bestMove = pmoves[0];
           var bestScore = 0;
+          
           for (const move of pmoves) {
-            var nboard = this.applyMove(board, move[0], move[1], ficha);
+            var nboard = this.applyMove(board, move[0], move[1], this.color);
 
             const score =
-              this.countBw(nboard, ficha) - this.countBw(board, ficha);
-            console.log(score);
+              this.countBw(nboard, this.color) -
+              this.countBw(board, this.color);
+            
             if (score > bestScore) {
               bestScore = score;
               bestMove = move;
             }
           }
+          
 
           return bestMove;
         }
 
+        
+
+        countBw2(array, letter) {
+          let count = 0;
+
+          for (let index = 0; index < array.length; index++) {
+            
+            for (let j = 0; j < array.length; j++) {
+
+              if (array[index][j] == letter) {
+                count += this.wm[index][j];
+              }
+              
+              
+            }
+            
+          }
+          return count;
+        }
+        getscore(array, letter) {
+          let count = 0;
+          for (const row of array) {
+            for (const cell of row) {
+              if (cell === letter) {
+                count++;
+              }
+            }
+          }
+          return count;
+        }
         countBw(array, letter) {
           let count = 0;
           for (const row of array) {
@@ -471,6 +590,79 @@
           }
           return count;
         }
+
+        getFlip(board, i, j, player) {
+          // Comprobamos que la coordenada es válida
+          if (
+            i < 0 ||
+            i >= board.length ||
+            j < 0 ||
+            j >= board[0].length ||
+            board[i][j] !== " "
+          ) {
+            return 0;
+          }
+
+          // Copiamos el tablero para no modificar el original
+          const newBoard = board.map((row) => row.slice());
+
+          // Determinamos el color del jugador actual y el contrario
+          const color = player === "B" ? "B" : "W";
+          const oppositeColor = player === "B" ? "W" : "B";
+
+          // Colocamos la ficha del jugador actual en la coordenada indicada
+          newBoard[i][j] = color;
+
+          let flippedCount = 0; // contador de fichas volteadas
+
+          // Buscamos si hay alguna ficha del color contrario que se pueda voltear
+          const directions = [    [-1, 0],
+            [0, -1],
+            [1, 0],
+            [0, 1],
+            [-1, -1],
+            [-1, 1],
+            [1, -1],
+            [1, 1],
+          ];
+          for (const [dx, dy] of directions) {
+            let x = i + dx;
+            let y = j + dy;
+            let flipped = false;
+            while (
+              x >= 0 &&
+              x < newBoard.length &&
+              y >= 0 &&
+              y < newBoard[0].length &&
+              newBoard[x][y] === oppositeColor
+            ) {
+              x += dx;
+              y += dy;
+              flipped = true;
+            }
+            if (
+              flipped &&
+              x >= 0 &&
+              x < newBoard.length &&
+              y >= 0 &&
+              y < newBoard[0].length &&
+              newBoard[x][y] === color
+            ) {
+              x -= dx;
+              y -= dy;
+              while (newBoard[x][y] === oppositeColor) {
+                newBoard[x][y] = color;
+                flippedCount++; // aumentamos el contador de fichas volteadas
+                x -= dx;
+                y -= dy;
+              }
+            }
+          }
+
+          return flippedCount;
+        }
+
+      
 
         applyMove(board, i, j, player) {
           // Comprobamos que la coordenada es válida
@@ -551,100 +743,26 @@
         compute(board, time) {
           var moves = this.board.valid_moves(board, this.color);
 
-          return this.minimax(board, 4, true, this.color, null);
-        }
-
-        minimax(board, depth, maximizingPlayer, player, move) {
-          // Verificar si el juego ha terminado o si se ha alcanzado la profundidad máxima.
-          var moves = this.board.valid_moves(board, player);
-          var piece = player === "B" ? "W" : "B";
-
-          // Verificar si el juego ha terminado o si se ha alcanzado la profundidad máxima.
-          if (depth == 0 || moves == []) {
-            var color = this.countBw(board, this.color);
-            var otro = this.color === "B" ? "W" : "B";
-
-            var cp2 = this.countBw(board, piece);
-            if (color > cp2) {
-              return [1, move];
-            } else if (color < cp2) {
-              return [-1, move];
-            } else {
-              return [0, move];
-            }
-          }
-
-          // Si el jugador es el máximo, buscar el movimiento con la mejor puntuación.
-          else if (maximizingPlayer) {
-            var bestScore = -Infinity;
-            var bestMove = null;
-
-            for (var i = 0; i < moves.length; i++) {
-              var move = moves[i];
-
-              var newBoard = this.applyMove(board, move[0], move[1], player);
-              var piece = player === "B" ? "W" : "B";
-
-              var score = this.minimax(
-                newBoard,
-                depth - 1,
-                false,
-                piece,
-                move
-              )[0];
-              if (score >= bestScore) {
-                bestScore = score;
-                bestMove = move;
-              }
-            }
-
-            return [bestScore, bestMove];
-          } else {
-            // Si el jugador es el mínimo, buscar el movimiento con la peor puntuación.
-            var bestScore = Infinity;
-            var bestMove = null;
-
-            for (var i = 0; i < moves.length; i++) {
-              var move = moves[i];
-
-              var newBoard = this.applyMove(board, move[0], move[1], player);
-              var piece = player === "B" ? "W" : "B";
-
-              var score = this.minimax(
-                newBoard,
-                depth - 1,
-                true,
-                piece,
-                move
-              )[0];
-              if (score < bestScore) {
-                bestScore = score;
-                bestMove = move;
-              }
-            }
-
-            return [bestScore, bestMove];
-          }
+          return this.bestMove(board,moves);
         }
 
         bestMove(board, pmoves) {
           var bestMove = pmoves[0];
           var bestScore = 0;
-          console.log(this.color);
+          
           for (const move of pmoves) {
             var nboard = this.applyMove(board, move[0], move[1], this.color);
 
             const score =
               this.countBw(nboard, this.color) -
               this.countBw(board, this.color);
-            console.log(score);
+            
             if (score > bestScore) {
               bestScore = score;
               bestMove = move;
             }
           }
-          console.log(bestScore);
-          console.log(bestMove);
+          
 
           return bestMove;
         }
@@ -961,6 +1079,255 @@
         }
       }
 
+
+      class bestB extends Agent {
+        constructor() {
+          super();
+          this.board = new Board();
+          
+          
+        }
+        
+
+        compute(board, time) {
+        
+
+          const moves = this.board.valid_moves(board, this.color);         
+
+          moves.sort((a, b) => this.evaluateMove(board, b, this.color) - this.evaluateMove(board, a, this.color));
+
+
+          console.log(moves)
+          return moves[0]
+
+        }
+
+
+
+        evaluateMove(board, move, player) {
+          const color = player === 'B' ? 'B' : 'W';
+          const oppositeColor = player === 'B' ? 'W' : 'B';
+          
+          const flipped = this.getFlipped(board, move[0], move[1], color);
+          if (flipped === null) {
+            return -Infinity;
+          }
+          
+          const captured = this.countCaptured(board, flipped);
+          const protected1 = this.countProtected1(flipped, color);
+          const corners = this.countCorners(move[0], move[1]);
+          const edges = this.countEdges(flipped, color);
+          const mobility = this.countMobility(flipped, oppositeColor);
+          const position = this.getPositionValue(move[0], move[1]);
+          
+          var score =
+            captured * 10 +
+            protected1 * 5 +
+            corners * 50 +
+            edges * 10 +
+            mobility * 2 +
+            position;
+          
+          if (score<=0){
+            score=1
+          }
+          return score;
+        }
+
+      
+
+      countCaptured(board, flipped) {
+        
+        let captured = 0;
+        for (let i = 0; i < board.length; i++) {
+          for (let j = 0; j < board[0].length; j++) {
+            if (board[i][j] != flipped[i][j]) {
+              captured++;
+              if(i==0 || j==0 || i== board[0].length-1 || j== board[0].length-1 ){
+                captured++
+              }
+            }
+          }
+        }
+        return captured;
+      }
+
+      countProtected1(flipped, color){
+
+        const oppositeColor = color === "W" ? "B" : "B";
+        var moves = this.board.valid_moves(flipped,oppositeColor);  
+
+        var resultBoard = flipped.map((row) => row.slice());
+
+        var abortar = false
+        
+        for (var move of moves){
+          if ((move[0]<=1 && move[1]==flipped[0].length-2) ||(move[0]==flipped[0].length-2 && move[1]==flipped[0].length-2) ||(move[0]==flipped[0].length-2 && move[1]<=1) ||(move[0]<=1 && move[1]<=1)){
+            abortar = true
+            
+
+            
+            break
+          }
+          var newBoard=this.getFlipped(flipped,move[0],move[1],oppositeColor)
+          for (let i = 0; i < newBoard[0].length; i++) {
+            for (let j = 0; j < newBoard[0].length; j++) {
+              if (newBoard[i][j] != flipped[i][j]) {
+                resultBoard[i][j]="O"
+              }
+              
+            }
+         }
+
+        }
+        var protegidas = this.countAlive(resultBoard,color)
+        
+
+        if (abortar){
+          protegidas = protegidas - flipped.length*(flipped.length/2)
+        }
+        return protegidas
+      }
+      countCorners(i, j, n){
+
+        if ((i==0 && j==n-1) ||(i==n-1 && j==n-1) ||(i==n-1 && j==0) ||(i==0 && j==0)){
+          console.log("corner")
+          return 1
+        }
+        return 0
+      }
+      countEdges(flipped, color){
+        return 1
+      }
+      countMobility(flipped, oppositeColor){
+        return 1
+      }
+      getPositionValue(i, j){
+        return 1
+      }
+
+      countAlive(array, letter) {
+        let count = 0;
+        for (const row of array) {
+          for (const cell of row) {
+            if (cell === letter) {
+              count++;
+            }
+          }
+        }
+        return count;
+      }
+      
+
+      getFlipped(board, i, j, player) {
+          // Comprobamos que la coordenada es válida
+          if (
+            i < 0 ||
+            i >= board.length ||
+            j < 0 ||
+            j >= board[0].length ||
+            board[i][j] !== " "
+          ) {
+            return null;
+          }
+
+          // Copiamos el tablero para no modificar el original
+          const newBoard = board.map((row) => row.slice());
+
+          // Determinamos el color del jugador actual y el contrario
+          const color = player === "B" ? "B" : "W";
+          const oppositeColor = player === "B" ? "W" : "B";
+
+          // Colocamos la ficha del jugador actual en la coordenada indicada
+          newBoard[i][j] = color;
+
+          // Buscamos si hay alguna ficha del color contrario que se pueda voltear
+          const directions = [
+            [-1, 0],
+            [0, -1],
+            [1, 0],
+            [0, 1],
+            [-1, -1],
+            [-1, 1],
+            [1, -1],
+            [1, 1],
+          ];
+          for (const [dx, dy] of directions) {
+            let x = i + dx;
+            let y = j + dy;
+            let flipped = false;
+            while (
+              x >= 0 &&
+              x < newBoard.length &&
+              y >= 0 &&
+              y < newBoard[0].length &&
+              newBoard[x][y] === oppositeColor
+            ) {
+              x += dx;
+              y += dy;
+              flipped = true;
+            }
+            if (
+              flipped &&
+              x >= 0 &&
+              x < newBoard.length &&
+              y >= 0 &&
+              y < newBoard[0].length &&
+              newBoard[x][y] === color
+            ) {
+              x -= dx;
+              y -= dy;
+              while (newBoard[x][y] === oppositeColor) {
+                newBoard[x][y] = color;
+                x -= dx;
+                y -= dy;
+              }
+            }
+          }
+
+          return newBoard;
+        }
+      
+      
+      bestMove(board, pmoves) {
+        var bestMove = null;
+        var bestScore = 0;
+        
+        for (const move of pmoves) {
+          
+
+          const score = this.evaluateMove(board,move,this.color)
+          
+          if (score > bestScore) {
+            bestScore = score;
+            bestMove = move;
+          }
+        }
+        
+
+        return bestMove;
+      }
+
+      getscore(array, letter) {
+          let count = 0;
+          for (const row of array) {
+            for (const cell of row) {
+              if (cell === letter) {
+                count++;
+              }
+            }
+          }
+          return count;
+      }
+      
+
+
+
+
+    }
+
+
+
       /*
        * Environment (Cannot be modified or any of its attributes accesed directly)
        */
@@ -976,6 +1343,7 @@
             mdd: new ManyDisks(),
             mdc: new ManyDisks_Cristian(),
             bA: new bestA(),
+            bB: new bestB(),
           };
         }
 
@@ -1179,7 +1547,7 @@
                 width: "150px",
                 class: "w3-bar-item w3-input w3-border w3-round-xlarge",
                 placeholder: "&#xf00a; Size",
-                value: "8",
+                value: "18",
                 style:
                   "margin-top:2px;margin-bottom:2px;font-family: FontAwesome, Arial, Verdana, sans-serif;",
               },
@@ -1225,7 +1593,7 @@
                 width: "150px",
                 class: "w3-bar-item w3-input w3-border w3-round-xlarge",
                 placeholder: "&#xf111; Black",
-                value: "mdc",
+                value: "bB",
                 style:
                   "margin-top:2px;margin-bottom:2px;font-family: FontAwesome, Arial, Verdana, sans-serif;",
               },
