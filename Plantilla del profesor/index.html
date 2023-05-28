@@ -1075,6 +1075,7 @@
         }
       }
 
+      //Inicio agente bestB
       class bestB extends Agent {
         constructor() {
           super();
@@ -1090,7 +1091,7 @@
               this.evaluateMove(board, a, this.color)
           );
 
-          console.log(moves);
+          //console.log(moves);
           return moves[0];
         }
 
@@ -1098,7 +1099,13 @@
           const color = player === "B" ? "B" : "W";
           const oppositeColor = player === "B" ? "W" : "B";
 
+          //console.log(move);
+
           const flipped = this.getFlipped(board, move[0], move[1], color);
+
+          //console.log(board);
+          //console.log(flipped);
+
           if (flipped === null) {
             return -Infinity;
           }
@@ -1107,16 +1114,12 @@
           const protected1 = this.countProtected1(flipped, color);
           const corners = this.countCorners(move[0], move[1]);
           const edges = this.countEdges(flipped, color);
-          const mobility = this.countMobility(flipped, oppositeColor);
-          const position = this.getPositionValue(move[0], move[1]);
 
           var score =
             captured * 10 +
             protected1 * 5 +
             corners * 50 +
-            edges * 10 +
-            mobility * 2 +
-            position;
+            edges * 10;
 
           if (score <= 0) {
             score = 1;
@@ -1185,6 +1188,7 @@
           }
           return protegidas;
         }
+
         countCorners(i, j, n) {
           if (
             (i == 0 && j == n - 1) ||
@@ -1197,13 +1201,8 @@
           }
           return 0;
         }
+
         countEdges(flipped, color) {
-          return 1;
-        }
-        countMobility(flipped, oppositeColor) {
-          return 1;
-        }
-        getPositionValue(i, j) {
           return 1;
         }
 
@@ -1287,41 +1286,14 @@
 
           return newBoard;
         }
-
-        bestMove(board, pmoves) {
-          var bestMove = null;
-          var bestScore = 0;
-
-          for (const move of pmoves) {
-            const score = this.evaluateMove(board, move, this.color);
-
-            if (score > bestScore) {
-              bestScore = score;
-              bestMove = move;
-            }
-          }
-
-          return bestMove;
-        }
-
-        getscore(array, letter) {
-          let count = 0;
-          for (const row of array) {
-            for (const cell of row) {
-              if (cell === letter) {
-                count++;
-              }
-            }
-          }
-          return count;
-        }
       }
+      //Final agente bestB
 
+      //Inicio agente minimax
       class minmax extends Agent {
         constructor() {
           super();
           this.board = new Board();
-          var f = new bestB();
         }
 
         compute(board, time) {
@@ -1334,15 +1306,10 @@
             Infinity
           ).move;
 
-          if (movi == null || movi == []) {
-            var move = this.board.valid_moves(board, this.color);
-
-            return this.f.bestMove(board, move);
-          }
-
           return movi;
         }
 
+        //Retorna la diferencia de fichas entre el jugador y el oponente actuales
         winner(board) {
           let colorCount = 0;
           let opponentCount = 0;
@@ -1434,6 +1401,7 @@
         minimaxAlphaBeta(board, depth, maximizingPlayer, color, alpha, beta) {
           var oppositeColor = color === "B" ? "W" : "B";
 
+          //Si la profundidad es 0 o ya ninguno de los jugadores puede mover
           if (
             depth === 0 ||
             (!this.board.can_play(board, color) &&
@@ -1449,6 +1417,7 @@
             let maxEval = -Infinity;
             let bestMove = null;
             const possibleMoves = this.board.valid_moves(board, color);
+            //console.log(possibleMoves);
             for (let i = 0; i < possibleMoves.length; i++) {
               const move = possibleMoves[i];
               const newBoard = this.getFlipped(board, move[0], move[1], color);
@@ -1504,6 +1473,7 @@
           }
         }
       }
+      //Fin agente minimax
 
       /*
        * Environment (Cannot be modified or any of its attributes accesed directly)
@@ -1771,7 +1741,7 @@
                 width: "150px",
                 class: "w3-bar-item w3-input w3-border w3-round-xlarge",
                 placeholder: "&#xf111; Black",
-                value: "rand",
+                value: "bB",
                 style:
                   "margin-top:2px;margin-bottom:2px;font-family: FontAwesome, Arial, Verdana, sans-serif;",
               },
