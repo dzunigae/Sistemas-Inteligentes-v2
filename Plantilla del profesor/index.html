@@ -1116,10 +1116,7 @@
           const edges = this.countEdges(flipped, color);
 
           var score =
-            captured * 10 +
-            protected1 * 5 +
-            corners * 50 +
-            edges * 10;
+            captured * 10 + protected1 * 5 + corners * 50 + edges * 10;
 
           if (score <= 0) {
             score = 1;
@@ -1475,6 +1472,386 @@
       }
       //Fin agente minimax
 
+      //Inicio agente supremo
+      class supreme extends Agent {
+        constructor() {
+          super();
+          this.board = new Board();
+        }
+
+        compute(board, time) {
+          var movi = this.minimaxAlphaBeta(
+            board,
+            4,
+            true,
+            this.color,
+            -Infinity,
+            Infinity
+          ).move;
+
+          return movi;
+        }
+
+        //Retorna la diferencia de fichas entre el jugador y el oponente actuales
+        winner(board) {
+          let colorCount = 0;
+          let opponentCount = 0;
+
+          const oppositeColor = this.color === "B" ? "W" : "B";
+
+          for (let i = 0; i < board.length; i++) {
+            for (let j = 0; j < board[i].length; j++) {
+              if (board[i][j] === this.color) {
+                colorCount++;
+              } else if (board[i][j] === oppositeColor) {
+                opponentCount++;
+              }
+            }
+          }
+
+          if(colorCount - opponentCount < 0){
+            return -1
+          }else{
+            return 1
+          }
+
+          //return colorCount - opponentCount;
+        }
+
+        //Ejecución del movimiento actual
+        getFlipped(board, i, j, player) {
+          // Comprobamos que la coordenada es válida
+          if (
+            i < 0 ||
+            i >= board.length ||
+            j < 0 ||
+            j >= board[0].length ||
+            board[i][j] !== " "
+          ) {
+            return null;
+          }
+
+          // Copiamos el tablero para no modificar el original
+          const newBoard = board.map((row) => row.slice());
+
+          // Determinamos el color del jugador actual y el contrario
+          const color = player === "B" ? "B" : "W";
+          const oppositeColor = player === "B" ? "W" : "B";
+
+          // Colocamos la ficha del jugador actual en la coordenada indicada
+          newBoard[i][j] = color;
+
+          // Buscamos si hay alguna ficha del color contrario que se pueda voltear
+          const directions = [
+            [-1, 0],
+            [0, -1],
+            [1, 0],
+            [0, 1],
+            [-1, -1],
+            [-1, 1],
+            [1, -1],
+            [1, 1],
+          ];
+          for (const [dx, dy] of directions) {
+            let x = i + dx;
+            let y = j + dy;
+            let flipped = false;
+            while (
+              x >= 0 &&
+              x < newBoard.length &&
+              y >= 0 &&
+              y < newBoard[0].length &&
+              newBoard[x][y] === oppositeColor
+            ) {
+              x += dx;
+              y += dy;
+              flipped = true;
+            }
+            if (
+              flipped &&
+              x >= 0 &&
+              x < newBoard.length &&
+              y >= 0 &&
+              y < newBoard[0].length &&
+              newBoard[x][y] === color
+            ) {
+              x -= dx;
+              y -= dy;
+              while (newBoard[x][y] === oppositeColor) {
+                newBoard[x][y] = color;
+                x -= dx;
+                y -= dy;
+              }
+            }
+          }
+
+          return newBoard;
+        }
+
+        //Minimax en sí
+        minimaxAlphaBeta(board, depth, maximizingPlayer, color, alpha, beta) {
+          var oppositeColor = color === "B" ? "W" : "B";
+
+          //Caso base
+          //Si la profundidad es 0 o ya ninguno de los jugadores puede mover
+          if (
+            !this.board.can_play(board, color) &&
+            !this.board.can_play(board, oppositeColor)
+          ) {
+            return {
+              score: Infinity,
+              move: null,
+            };
+          } else {
+            if (depth === 0) {
+              const moves = this.board.valid_moves(board, this.color);
+
+              moves.sort(
+                (a, b) =>
+                  this.evaluateMove(board, b, this.color) -
+                  this.evaluateMove(board, a, this.color)
+              );
+
+              console.log(moves);
+              if(moves.length === 0){
+                return {
+                  score: Infinity,
+                  move: null,
+                };
+              }
+
+              var move = moves[0];
+
+              const flipped = this.getFlipped(board, move[0], move[1], color);
+
+              if (flipped === null) {
+                return {
+                  score: Infinity,
+                  move: null,
+                };
+              }
+
+              const captured = this.countCaptured(board, flipped);
+              const protected1 = this.countProtected1(flipped, color);
+              const corners = this.countCorners(move[0], move[1]);
+              const edges = this.countEdges(flipped, color);
+
+              return {
+                score: (captured * 10 + protected1 * 5 + corners * 50 + edges * 10)*this.winner(board),
+                move: move,
+              };
+            }
+          }
+
+          if (maximizingPlayer) {
+            let maxEval = -Infinity;
+            let bestMove = null;
+            const possibleMoves = this.board.valid_moves(board, color);
+            possibleMoves.sort(
+              (a, b) =>
+                this.evaluateMove(board, b, this.color) -
+                this.evaluateMove(board, a, this.color)
+            );
+
+            let im = 0;
+            if (possibleMoves.length < 5) {
+              im = possibleMoves.length;
+            } else {
+              im = 5;
+            }
+
+            //console.log(possibleMoves);
+            for (let i = 0; i < im; i++) {
+              const move = possibleMoves[i];
+              const newBoard = this.getFlipped(board, move[0], move[1], color);
+              const evaluar = this.minimaxAlphaBeta(
+                newBoard,
+                depth - 1,
+                false,
+                oppositeColor,
+                alpha,
+                beta
+              );
+              if (evaluar.score > maxEval) {
+                maxEval = evaluar.score;
+                bestMove = move;
+              }
+              alpha = Math.max(alpha, evaluar.score);
+              if (beta <= alpha) {
+                break; // Beta cut-off
+              }
+            }
+            return {
+              score: maxEval,
+              move: bestMove,
+            };
+          } else {
+            let minEval = Infinity;
+            let bestMove = null;
+            const possibleMoves = this.board.valid_moves(board, color);
+            possibleMoves.sort(
+              (a, b) =>
+                this.evaluateMove(board, b, this.color) -
+                this.evaluateMove(board, a, this.color)
+            );
+
+            let im = 0;
+            if (possibleMoves.length < 5) {
+              im = possibleMoves.length;
+            } else {
+              im = 5;
+            }
+
+            //console.log(possibleMoves);
+            for (let i = 0; i < im; i++) {
+              const move = possibleMoves[i];
+              const newBoard = this.getFlipped(board, move[0], move[1], color);
+              const evaluar = this.minimaxAlphaBeta(
+                newBoard,
+                depth - 1,
+                true,
+                color,
+                alpha,
+                beta
+              );
+              if (evaluar.score < minEval) {
+                minEval = evaluar.score;
+                bestMove = move;
+              }
+              beta = Math.min(beta, evaluar.score);
+              if (beta <= alpha) {
+                break; // Alpha cut-off
+              }
+            }
+            return {
+              score: minEval,
+              move: bestMove,
+            };
+          }
+        }
+
+        evaluateMove(board, move, player) {
+          const color = player === "B" ? "B" : "W";
+          const oppositeColor = player === "B" ? "W" : "B";
+
+          //console.log(move);
+
+          const flipped = this.getFlipped(board, move[0], move[1], color);
+
+          //console.log(board);
+          //console.log(flipped);
+
+          if (flipped === null) {
+            return -Infinity;
+          }
+
+          const captured = this.countCaptured(board, flipped);
+          const protected1 = this.countProtected1(flipped, color);
+          const corners = this.countCorners(move[0], move[1]);
+          const edges = this.countEdges(flipped, color);
+
+          var score =
+            captured * 10 + protected1 * 5 + corners * 50 + edges * 10;
+
+          if (score <= 0) {
+            score = 1;
+          }
+          return score;
+        }
+
+        countCaptured(board, flipped) {
+          let captured = 0;
+          for (let i = 0; i < board.length; i++) {
+            for (let j = 0; j < board[0].length; j++) {
+              if (board[i][j] != flipped[i][j]) {
+                captured++;
+                if (
+                  i == 0 ||
+                  j == 0 ||
+                  i == board[0].length - 1 ||
+                  j == board[0].length - 1
+                ) {
+                  captured++;
+                }
+              }
+            }
+          }
+          return captured;
+        }
+
+        countProtected1(flipped, color) {
+          const oppositeColor = color === "W" ? "B" : "B";
+          var moves = this.board.valid_moves(flipped, oppositeColor);
+
+          var resultBoard = flipped.map((row) => row.slice());
+
+          var abortar = false;
+
+          for (var move of moves) {
+            if (
+              (move[0] <= 1 && move[1] == flipped[0].length - 2) ||
+              (move[0] == flipped[0].length - 2 &&
+                move[1] == flipped[0].length - 2) ||
+              (move[0] == flipped[0].length - 2 && move[1] <= 1) ||
+              (move[0] <= 1 && move[1] <= 1)
+            ) {
+              abortar = true;
+
+              break;
+            }
+            var newBoard = this.getFlipped(
+              flipped,
+              move[0],
+              move[1],
+              oppositeColor
+            );
+            for (let i = 0; i < newBoard[0].length; i++) {
+              for (let j = 0; j < newBoard[0].length; j++) {
+                if (newBoard[i][j] != flipped[i][j]) {
+                  resultBoard[i][j] = "O";
+                }
+              }
+            }
+          }
+          var protegidas = this.countAlive(resultBoard, color);
+
+          if (abortar) {
+            protegidas = protegidas - flipped.length * (flipped.length / 2);
+          }
+          return protegidas;
+        }
+
+        countCorners(i, j, n) {
+          if (
+            (i == 0 && j == n - 1) ||
+            (i == n - 1 && j == n - 1) ||
+            (i == n - 1 && j == 0) ||
+            (i == 0 && j == 0)
+          ) {
+            console.log("corner");
+            return 1;
+          }
+          return 0;
+        }
+
+        countEdges(flipped, color) {
+          return 1;
+        }
+
+        countAlive(array, letter) {
+          let count = 0;
+          for (const row of array) {
+            for (const cell of row) {
+              if (cell === letter) {
+                count++;
+              }
+            }
+          }
+          return count;
+        }
+      }
+      //Fin agente supremo
+
       /*
        * Environment (Cannot be modified or any of its attributes accesed directly)
        */
@@ -1492,6 +1869,7 @@
             bA: new bestA(),
             bB: new bestB(),
             mm: new minmax(),
+            spr: new supreme(),
           };
         }
 
@@ -1711,7 +2089,7 @@
                 width: "150px",
                 class: "w3-bar-item w3-input w3-border w3-round-xlarge",
                 placeholder: "&#xf10c; White",
-                value: "mm",
+                value: "spr",
 
                 style:
                   "margin-top:2px;margin-bottom:2px;font-family: FontAwesome, Arial, Verdana, sans-serif;",
