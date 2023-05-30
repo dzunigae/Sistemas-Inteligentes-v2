@@ -1863,7 +1863,7 @@
         compute(board, time) {
           var movi = this.minimaxAlphaBeta(
             board,
-            4,
+            3,
             true,
             this.color,
             -Infinity,
@@ -1974,18 +1974,11 @@
           const captured = this.countCaptured(board, flipped);
           const protected1 = this.countProtected1(flipped, color);
           const corners = this.countCorners(move[0], move[1]);
-          const edges = this.countEdges(flipped, color);
-          const mobility = this.countMobility(flipped, oppositeColor);
-          const position = this.getPositionValue(move[0], move[1]);
           
           var score =
             captured * 10 +
             protected1 * 5 +
-            corners * 50 +
-            edges * 10 +
-            mobility * 2 +
-            position;
-          
+            corners * 50      
           if (score<=0){
             score=1
           }
@@ -2052,15 +2045,6 @@
         }
         return 0
       }
-      countEdges(flipped, color){
-        return 1
-      }
-      countMobility(flipped, oppositeColor){
-        return 1
-      }
-      getPositionValue(i, j){
-        return 1
-      }
 
       countAlive(array, letter) {
         let count = 0;
@@ -2088,20 +2072,23 @@
               move: null,
             };
           }
+        
 
           if (maximizingPlayer) {
             let maxEval = -Infinity;
             let bestMove = null;
             const possibleMoves = this.board.valid_moves(board, color);
+            console.log("movimientos:", possibleMoves)
             possibleMoves.sort((moveA, moveB) => {
             const evalA = this.evaluateMove(board, moveA, color);
             const evalB = this.evaluateMove(board, moveB, color);
             return evalB - evalA; // Ordenar en orden descendente
+            console.log("bestMove:", bestMove);
           });
           
           const movesToEvaluate = Math.min(3, possibleMoves.length); // Limitar a los tres primeros movimientos
-  
-  for (let i = 0; i < movesToEvaluate; i++) {
+          console.log("movimientos a evaluar:", movesToEvaluate);
+          for (let i = 0; i < movesToEvaluate; i++) {
               const move = possibleMoves[i];
               const newBoard = this.getFlipped(board, move[0], move[1], color);
               const evaluar = this.minimaxAlphaBeta(
@@ -2116,11 +2103,16 @@
                 maxEval = evaluar.score;
                 bestMove = move;
               }
+              else{
+                bestMove = possibleMoves[0];
+              }
+              console.log("bestMoveinmax:", bestMove);
               alpha = Math.max(alpha, evaluar.score);
               if (beta <= alpha) {
                 break; // Beta cut-off
               }
             }
+            console.log("mejor movimiento:", bestMove);
             return {
               score: maxEval,
               move: bestMove,
@@ -2129,6 +2121,7 @@
             let minEval = Infinity;
             let bestMove = null;
             const possibleMoves = this.board.valid_moves(board, color);
+            console.log(possibleMoves);
             for (let i = 0; i < possibleMoves.length; i++) {
               const move = possibleMoves[i];
               const newBoard = this.getFlipped(board, move[0], move[1], color);
@@ -2149,6 +2142,7 @@
                 break; // Alpha cut-off
               }
             }
+            console.log("mejor movimiento min:", bestMove);
             return {
               score: minEval,
               move: bestMove,
