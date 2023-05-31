@@ -1858,20 +1858,26 @@
         constructor() {
           super();
           this.board = new Board();
+          
         }
 
         compute(board, time) {
+
+          let transpositionTable = new Map();
+          console.log("tabla mov",transpositionTable);
+
           var movi = this.minimaxAlphaBeta(
             board,
-            3,
+            4,
             true,
             this.color,
             -Infinity,
-            Infinity
+            Infinity,
+            transpositionTable
           ).move;
 
           return movi;
-        }
+        }   
 
         //Retorna la diferencia de fichas entre el jugador y el oponente actuales
         winner(board) {
@@ -1974,16 +1980,35 @@
           const captured = this.countCaptured(board, flipped);
           const protected1 = this.countProtected1(flipped, color);
           const corners = this.countCorners(move[0], move[1]);
+          const borders = this.countBorders(move[0], move[1]);
+
+          const numPieces = this.countAlive(flipped, color) + this.countAlive(flipped, oppositeColor);
+
+          if (numPieces > board.length * board.length /2) {
+    // En la segunda mitad del juego, dar más importancia a las esquinas y menos importancia a las fichas capturadas
+            var score =
+            captured * 15 +
+            protected1 * 5 +
+            corners * 50 + 
+            borders * 15     
+          if (score<=0){
+            score=1
+          }
+          return score;
+  } else {
           
           var score =
-            captured * 10 +
+            captured * 50 +
             protected1 * 5 +
-            corners * 50      
+            corners * 10  +
+            borders * 20
+
           if (score<=0){
             score=1
           }
           return score;
         }
+      }
 
         countCaptured(board, flipped) {
         
@@ -2045,6 +2070,12 @@
         }
         return 0
       }
+      countBorders(i,j, n){
+        if (i==0 || j==0 || i== n-1 || j== n-1){
+          return 1
+        }
+        return 0
+      }
 
       countAlive(array, letter) {
         let count = 0;
@@ -2058,8 +2089,15 @@
         return count;
       }
 
-        minimaxAlphaBeta(board, depth, maximizingPlayer, color, alpha, beta) {
+        minimaxAlphaBeta(board, depth, maximizingPlayer, color, alpha, beta,transpositionTable) {
           var oppositeColor = color === "B" ? "W" : "B";
+
+          let boardString = JSON.stringify(board);
+
+          // Verificar si el tablero ya ha sido evaluado antes
+          if (transpositionTable.has(boardString)) {
+            return transpositionTable.get(boardString);
+          }
 
           //Si la profundidad es 0 o ya ninguno de los jugadores puede mover
           if (
@@ -2067,10 +2105,13 @@
             (!this.board.can_play(board, color) &&
               !this.board.can_play(board, oppositeColor))
           ) {
-            return {
+            let result = {
               score: this.winner(board),
               move: null,
             };
+            transpositionTable.set(boardString, result);
+            return result;
+
           }
         
 
@@ -2097,7 +2138,8 @@
                 false,
                 oppositeColor,
                 alpha,
-                beta
+                beta,
+                transpositionTable
               );
               if (evaluar.score > maxEval) {
                 maxEval = evaluar.score;
@@ -2113,10 +2155,12 @@
               }
             }
             console.log("mejor movimiento:", bestMove);
-            return {
+            let result = {
               score: maxEval,
               move: bestMove,
             };
+            transpositionTable.set(boardString, result);
+            return result;
           } else {
             let minEval = Infinity;
             let bestMove = null;
@@ -2131,7 +2175,8 @@
                 true,
                 color,
                 alpha,
-                beta
+                beta,
+                transpositionTable
               );
               if (evaluar.score < minEval) {
                 minEval = evaluar.score;
@@ -2143,13 +2188,18 @@
               }
             }
             console.log("mejor movimiento min:", bestMove);
-            return {
+            let result ={
               score: minEval,
               move: bestMove,
             };
+            transpositionTable.set(boardString, result);
+            return result;
           }
         }
       }
+
+
+      
 
       /*
        * Environment (Cannot be modified or any of its attributes accesed directly)
@@ -2170,6 +2220,8 @@
             mm: new minmax(),
             spr: new supreme(),
             minmax_bB: new minmax2(),
+            enemy: new Enemy(),
+            min_bB: new minmax2v(),
           };
         }
 
