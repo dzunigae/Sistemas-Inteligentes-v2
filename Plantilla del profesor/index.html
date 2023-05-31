@@ -1133,7 +1133,7 @@
           var score =
             captured * 10 +
             protected1 * 5 +
-            corners * 50 ;
+            corners * 100 ;
           
           if (score<=0){
             score=1
@@ -1509,7 +1509,7 @@
         const w=  this.white(board)
         
 
-        if (w > (board.length**2)/4 ) {
+        if (w > (20)) {
           const moves = this.board.valid_moves(board, this.color);         
 
           moves.sort((a, b) => this.evaluateMove(board, b, this.color) - this.evaluateMove(board, a, this.color));
@@ -1519,7 +1519,7 @@
         }
 
 
-        var movi= this.minimaxAlphaBeta(board,10,true,this.color,-Infinity,Infinity).move
+        var movi= this.minimaxAlphaBeta(board,12,true,this.color,-Infinity,Infinity).move
 
         if (movi == null || movi==[]){
           var move = this.board.valid_moves(board, this.color)
@@ -1661,10 +1661,11 @@
           let maxEval = -Infinity;
           let bestMove = null;
 
-          const possibleMoves =this.getTopN(board,color);
+          
+          //const possibleMoves =this.getTopN(board,color);
           
 
-          //const possibleMoves = this.board.valid_moves(board, color);
+          const possibleMoves = this.board.valid_moves(board, color);
 
           for (let i = 0; i < possibleMoves.length; i++) {
             const move = possibleMoves[i];
@@ -1686,8 +1687,8 @@
         } else {
           let minEval = Infinity;
           let bestMove = null;
-          const possibleMoves =this.getTopN(board,color);
-          //const possibleMoves = this.board.valid_moves(board, color);
+          //const possibleMoves =this.getTopN(board,color);
+          const possibleMoves = this.board.valid_moves(board, color);
           for (let i = 0; i < possibleMoves.length; i++) {
             const move = possibleMoves[i];
             const newBoard = this.getFlipped(board, move[0], move[1], color);
